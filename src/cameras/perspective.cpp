@@ -14,9 +14,8 @@ namespace lightwave {
  */
 class Perspective : public Camera {
 protected:
-    float z;
-    float x_ratio = 1;
-    float y_ratio = 1;
+    float x_ratio;
+    float y_ratio;
 
 public:
     Perspective(const Properties &properties) : Camera(properties) {
@@ -24,22 +23,28 @@ public:
 
         // * precompute any expensive operations here (most importantly
         // trigonometric functions)
-        // calculate the length of the z vector, must transform fov to radians
-        z = 1 / tan((fov / 2) * (Pi / 180));
-        // hints:
+        // compute factor to map on plane z = 1, must transform deg to radians
+        float tan_fov = tan((fov / 2.0f) * (Pi / 180));
+
         // * use m_resolution to find the aspect ratio of the image
-        float y = m_resolution.y();
-        float x = m_resolution.x();
-        // TODO: truly understand why we need the if case
-        if (z >= 1)
-            x_ratio = x / y;
-        else
-            y_ratio = y / x;
+        float width  = m_resolution.x();
+        float height = m_resolution.y();
+
+        // construct factor to include aspect ratio and fov
+        std::string fovAxis = properties.get<std::string>("fovAxis");
+        if (fovAxis == "y") {
+            x_ratio = (width / height) * tan_fov;
+            y_ratio = tan_fov;
+        } else if (fovAxis == "x") {
+            x_ratio = tan_fov;
+            y_ratio = (height / width) * tan_fov;
+        }
     }
 
     CameraSample sample(const Point2 &normalized, Sampler &rng) const override {
         // define vector pointing to the point on the z plane
-        Vector direction(normalized.x() * x_ratio, normalized.y() * y_ratio, z);
+        Vector direction(
+            normalized.x() * x_ratio, normalized.y() * y_ratio, 1.0f);
 
         // normalize the local ray
         Ray local_ray(Vector(0.f, 0.f, 0.f), direction.normalized());
