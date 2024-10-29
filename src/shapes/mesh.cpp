@@ -38,7 +38,56 @@ protected:
 
     bool intersect(int primitiveIndex, const Ray &ray, Intersection &its,
                    Sampler &rng) const override {
-        NOT_IMPLEMENTED
+        Point orig = ray.origin;
+        Vector dir = ray.direction;
+
+        Vector3i indices = m_triangles[primitiveIndex];
+
+        Vertex v0 = m_vertices[indices[0]];
+        Vertex v1 = m_vertices[indices[1]];
+        Vertex v2 = m_vertices[indices[2]];
+
+        Vector v0v1 = v1.position - v0.position;
+        Vector v0v2 = v2.position - v0.position;
+        Vector pvec = dir.cross(v0v2);
+        float det   = v0v1.dot(pvec);
+
+        if (fabs(det) < Epsilon)
+            return false;
+
+        float invDet = 1 / det;
+
+        Vector tvec = orig - v0.position;
+        float u     = tvec.dot(pvec) * invDet;
+        if (u < 0 || u > 1)
+            return false;
+
+        Vector qvec = tvec.cross(v0v1);
+        float v     = dir.dot(qvec) * invDet;
+        if (v < 0 || u + v > 1)
+            return false;
+
+        float t = v0v2.dot(qvec) * invDet;
+
+        if (t < Epsilon || t > its.t)
+            return false;
+
+        its.t        = t;
+        its.position = ray(t);
+        its.uv.x()   = u;
+        its.uv.y()   = v;
+
+        its.tangent        = v0v1.normalized();
+        its.geometryNormal = v0v1.cross(v0v2).normalized();
+        if (m_smoothNormals) {
+            its.shadingNormal =
+                Vertex::interpolate(Vector2(u, v), v0, v1, v2).normal;
+        } else {
+            its.shadingNormal = its.geometryNormal;
+        }
+        its.pdf = 0;
+
+        return true;
 
         // hints:
         // * use m_triangles[primitiveIndex] to get the vertex indices of the
@@ -51,11 +100,38 @@ protected:
     }
 
     Bounds getBoundingBox(int primitiveIndex) const override {
-        NOT_IMPLEMENTED
+        Vector3i indices = m_triangles[primitiveIndex];
+
+        Vertex v0 = m_vertices[indices[0]];
+        Vertex v1 = m_vertices[indices[1]];
+        Vertex v2 = m_vertices[indices[2]];
+
+        float minX =
+            min(v0.position.x(), min(v1.position.x(), v2.position.x()));
+        float minY =
+            min(v0.position.y(), min(v1.position.y(), v2.position.y()));
+        float minZ =
+            min(v0.position.z(), min(v1.position.z(), v2.position.z()));
+
+        float maxX =
+            max(v0.position.x(), max(v1.position.x(), v2.position.x()));
+        float maxY =
+            max(v0.position.y(), max(v1.position.y(), v2.position.y()));
+        float maxZ =
+            max(v0.position.z(), max(v1.position.z(), v2.position.z()));
+
+        return Bounds(Point{ minX, minY, minZ }, Point{ maxX, maxY, maxZ });
     }
 
     Point getCentroid(int primitiveIndex) const override {
-        NOT_IMPLEMENTED
+        Vector3i indices = m_triangles[primitiveIndex];
+
+        Vector v0 = Vector(m_vertices[indices[0]].position);
+        Vector v1 = Vector(m_vertices[indices[1]].position);
+        Vector v2 = Vector(m_vertices[indices[2]].position);
+
+        Vector centroid = (v0 + v1 + v2) / 3;
+        return centroid;
     }
 
 public:
