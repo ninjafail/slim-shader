@@ -5,8 +5,7 @@
 
 namespace lightwave {
 
-void Instance::transformFrame(SurfaceEvent &surf, const Vector &wo) const {
-}
+void Instance::transformFrame(SurfaceEvent &surf, const Vector &wo) const {}
 
 inline void validateIntersection(const Intersection &its) {
     // use the following macros to make debugginer easier:
@@ -62,27 +61,7 @@ bool Instance::intersect(const Ray &worldRay, Intersection &its,
         validateIntersection(its);
         // hint: how does its.t need to change?
 
-        // if (its.frame.normal.dot(localRay.direction) > 0) {
-        //     /// TODO: hack, just for testing
-        //     its.frame.tangent *= -1;
-        //     its.frame.bitangent *= -1;
-        //     its.frame.normal *= -1;
-
-        //     its.geoFrame.tangent *= -1;
-        //     its.geoFrame.bitangent *= -1;
-        //     its.geoFrame.normal *= -1;
-        // }
         transformFrame(its, -localRay.direction);
-        // if (its.frame.normal.dot(worldRay.direction) > 0) {
-        //     /// TODO: hack, just for testing
-        //     its.frame.tangent *= -1;
-        //     its.frame.bitangent *= -1;
-        //     its.frame.normal *= -1;
-
-        //     its.geoFrame.tangent *= -1;
-        //     its.geoFrame.bitangent *= -1;
-        //     its.geoFrame.normal *= -1;
-        // }
     } else {
         its.t = previousT;
     }
