@@ -5,7 +5,16 @@
 
 namespace lightwave {
 
-void Instance::transformFrame(SurfaceEvent &surf, const Vector &wo) const {}
+void Instance::transformFrame(SurfaceEvent &surf, const Vector &wo) const {
+    // Transforms the Frame from object space to world space.
+    // reproject the shading frame into an orthonormal basis
+    // -> keep the direction of the tangent (but normalize it)
+
+    Frame shadingFrame = surf.shadingFrame();
+    surf.tangent       = shadingFrame.tangent.normalized();
+    surf.shadingNormal =
+        m_transform->applyNormal(shadingFrame.normal).normalized();
+}
 
 inline void validateIntersection(const Intersection &its) {
     // use the following macros to make debugginer easier:
@@ -49,17 +58,19 @@ bool Instance::intersect(const Ray &worldRay, Intersection &its,
 
     const float previousT = its.t;
     Ray localRay;
-    NOT_IMPLEMENTED
 
-    // hints:
     // * transform the ray (do not forget to normalize!)
-    // * how does its.t need to change?
+    localRay = m_transform->inverse(worldRay).normalized();
 
+    // calculate hit point
     const bool wasIntersected = m_shape->intersect(localRay, its, rng);
     if (wasIntersected) {
         its.instance = this;
         validateIntersection(its);
         // hint: how does its.t need to change?
+        // -> transform the hit point to world space and get distance
+        Point worldIntersection = m_transform->apply(its.position);
+        its.t = (worldIntersection - worldRay.origin).length();
 
         transformFrame(its, -localRay.direction);
     } else {
