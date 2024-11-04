@@ -49,7 +49,7 @@ public:
         float t;
 
         // t has to be positive for the hit point not to be behind the origin
-        if (t_0 > 0) {
+        if (t_0 > Epsilon) {
             t = t_0;
         } else if (t_1 > 0) {
             t = t_1;
