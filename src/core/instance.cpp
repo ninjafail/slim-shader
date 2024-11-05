@@ -72,17 +72,18 @@ bool Instance::intersect(const Ray &worldRay, Intersection &its,
 
     // calculate hit point
     const bool wasIntersected = m_shape->intersect(localRay, its, rng);
-    if (wasIntersected) {
-        its.instance = this;
-        validateIntersection(its);
-        // -> transform the hit point to world space and get distance
-        its.position = m_transform->apply(its.position);
-        its.t = (its.position - worldRay.origin).length();
-
-        transformFrame(its, -localRay.direction);
-    } else {
+    if (!wasIntersected) {
         its.t = previousT;
+        return false;
     }
+
+    its.instance = this;
+    validateIntersection(its);
+    // -> transform the hit point to world space and get distance
+    its.position = m_transform->apply(its.position);
+    its.t = (its.position - worldRay.origin).length();
+
+    transformFrame(its, -localRay.direction);
 
     return wasIntersected;
 }
