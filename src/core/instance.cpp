@@ -62,15 +62,22 @@ bool Instance::intersect(const Ray &worldRay, Intersection &its,
     // * transform the ray (do not forget to normalize!)
     localRay = m_transform->inverse(worldRay).normalized();
 
+    // hint: how does its.t need to change?
+    // currently the old intersection point is from world space, comparing it 
+    // with the new intersection point in its local space will not work
+    // -> transform the old intersection point to new local space 
+    if (its)
+        its.t = (localRay.origin - this->m_transform->inverse(its.position))
+                .length();
+
     // calculate hit point
     const bool wasIntersected = m_shape->intersect(localRay, its, rng);
     if (wasIntersected) {
         its.instance = this;
         validateIntersection(its);
-        // hint: how does its.t need to change?
         // -> transform the hit point to world space and get distance
-        Point worldIntersection = m_transform->apply(its.position);
-        its.t = (worldIntersection - worldRay.origin).length();
+        its.position = m_transform->apply(its.position);
+        its.t = (its.position - worldRay.origin).length();
 
         transformFrame(its, -localRay.direction);
     } else {
