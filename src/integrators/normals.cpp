@@ -7,7 +7,7 @@ class NormalIntegrator : public SamplingIntegrator {
 public:
     NormalIntegrator(const Properties &properties)
         : SamplingIntegrator(properties) {
-        m_remap = properties.get<bool>("remap");
+        m_remap = properties.get<bool>("remap", true);
     }
 
     Color Li(const Ray &ray, Sampler &rng) override {
