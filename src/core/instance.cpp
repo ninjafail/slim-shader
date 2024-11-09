@@ -5,7 +5,8 @@
 
 namespace lightwave {
 
-void Instance::transformFrame(SurfaceEvent &surf, const Vector &wo) const {}
+void Instance::transformFrame(SurfaceEvent &surf, const Vector &wo) const {
+}
 
 inline void validateIntersection(const Intersection &its) {
     // use the following macros to make debugginer easier:
