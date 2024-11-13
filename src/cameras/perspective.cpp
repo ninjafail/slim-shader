@@ -53,7 +53,7 @@ public:
         // into the world coordinate system
         Ray world_ray = m_transform->apply(local_ray);
 
-        return CameraSample{ .ray = world_ray, .weight = Color(1.0f) };
+        return CameraSample{ .ray = world_ray.normalized(), .weight = Color(1.0f) };
     }
 
     std::string toString() const override {
