@@ -14,7 +14,7 @@ public:
 
     DirectLightSample sampleDirect(const Point &origin,
                                    Sampler &rng) const override {
-        return DirectLightSample{ .wi       = direction,
+        return DirectLightSample{ .wi       = direction.normalized(),
                                   .weight   = intensity,
                                   .distance = Infinity };
     }

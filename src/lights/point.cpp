@@ -17,8 +17,9 @@ public:
         Color intensity = power / (4 * Pi);
         Vector dir      = position - origin;
         float distance  = dir.length();
+        float falloff   = 1 / (distance * distance);
         return DirectLightSample{ .wi       = dir.normalized(),
-                                  .weight   = intensity,
+                                  .weight   = intensity * falloff,
                                   .distance = distance };
     }
 

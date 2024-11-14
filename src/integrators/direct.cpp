@@ -7,25 +7,28 @@ public:
         : SamplingIntegrator(properties) {}
 
     Color Li(const Ray &ray, Sampler &rng) override {
-        Intersection intersection = m_scene->intersect(ray, rng);
+        Intersection its = m_scene->intersect(ray, rng);
 
         // If no intersection was found: we add contribution of background
-        if (intersection.background) {
-            return intersection.evaluateEmission().value;
+        if (!its) {
+            return its.evaluateEmission().value;
         }
 
         // If intersection was found: sample light
-        LightSample light = m_scene->sampleLight(rng);
-        DirectLightSample sample =
-            light.light->sampleDirect(intersection.position, rng);
+        LightSample light        = m_scene->sampleLight(rng);
+        DirectLightSample sample = light.light->sampleDirect(its.position, rng);
+        Ray reverse_light_ray(its.position, sample.wi);
 
-        Ray light_ray(intersection.position, -sample.wi);
-
-        if (m_scene->intersect(light_ray, rng).t < sample.distance) {
+        // If light is occluded: return black
+        // light is occluded if there is no intersection from the surface to
+        // the light source
+        Intersection light_its = m_scene->intersect(reverse_light_ray, rng);
+        if ((light_its) && light_its.t < sample.distance) {
             return Color(0);
         }
 
-        return sample.weight * intersection.evaluateBsdf(ray.direction).value;
+        return sample.weight * its.shadingNormal.dot(sample.wi) *
+               its.evaluateBsdf(sample.wi).value;
     }
 
     std::string toString() const override { return "DirectIntegrator[]"; }
