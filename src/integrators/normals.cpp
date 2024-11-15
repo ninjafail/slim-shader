@@ -11,8 +11,10 @@ public:
     }
 
     Color Li(const Ray &ray, Sampler &rng) override {
-        auto intersection = m_scene->intersect(ray, rng);
-        Vector normal     = intersection.geometryNormal;
+        Intersection intersection = m_scene->intersect(ray, rng);
+        if (!intersection)
+            return Color(0);
+        Vector normal     = intersection.shadingNormal;
         if (m_remap)
             return (Color(normal) + Color(1)) / 2;
         return Color(normal);
