@@ -23,7 +23,7 @@ public:
         // light is occluded if there is no intersection from the surface to
         // the light source
         Intersection light_its = m_scene->intersect(reverse_light_ray, rng);
-        if ((light_its) && light_its.t < sample.distance) {
+        if (light_its && light_its.t < sample.distance) {
             return Color(0);
         }
 
