@@ -41,7 +41,28 @@ public:
     }
 
     Color evaluate(const Point2 &uv) const override {
-        NOT_IMPLEMENTED
+        // first normalize the uv coordinates to [0, 1] depending on the border 
+        // mode
+        float u = uv.x();
+        float v = uv.y();
+        switch (m_border) {
+            case BorderMode::Clamp: 
+                u = clamp(u, 0.f, 1.f);
+                v = clamp(v, 0.f, 1.f);
+                break;
+            case BorderMode::Repeat: 
+                u = fmod(u, 1.f);
+                v = fmod(v, 1.f);
+                break;
+        }
+
+        auto resolution = m_image->resolution();
+        int x = u * (resolution.x());
+        int y = v * (resolution.y());
+
+        Color color = m_image->get(Point2i(x, y));
+
+        return color;
     }
 
     std::string toString() const override {
