@@ -52,7 +52,7 @@ public:
                 break;
             case BorderMode::Repeat: 
                 u = fmod(u, 1.f);
-                v = fmod(v, 1.f);
+                v = 1 - fmod(v, 1.f);
                 break;
         }
 
