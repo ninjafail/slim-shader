@@ -48,7 +48,7 @@ public:
         switch (m_border) {
             case BorderMode::Clamp: 
                 u = clamp(u, 0.f, 1.f);
-                v = clamp(v, 0.f, 1.f);
+                v = 1 - clamp(v, 0.f, 1.f);
                 break;
             case BorderMode::Repeat: 
                 u = fmod(u, 1.f);
