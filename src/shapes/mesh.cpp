@@ -52,7 +52,7 @@ protected:
         Vector pvec = dir.cross(v0v2);
         float det   = v0v1.dot(pvec);
 
-        if (fabs(det) < 1e-5f)
+        if (fabs(det) < 0)
             return false;
 
         float invDet = 1 / det;
