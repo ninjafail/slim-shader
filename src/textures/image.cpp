@@ -67,7 +67,7 @@ public:
             }
 
             Color color = m_image->get(Point2i(x, y));
-            return color;
+            return color * m_exposure;
         } else if (m_filter == FilterMode::Bilinear) {
             int x_0 = floorf(x_float);
             int y_0 = floorf(y_float);
@@ -110,7 +110,7 @@ public:
 
             Color color = lerp(c_0, c_1, x_float - x_0);
 
-            return color;
+            return color * m_exposure;
         }
 
         return Color(0);
