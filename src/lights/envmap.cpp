@@ -17,7 +17,19 @@ public:
     }
 
     EmissionEval evaluate(const Vector &direction) const override {
-        Point2 warped = Point2(0);
+
+        Vector dir = direction;
+        if (m_transform) {
+            dir = m_transform->inverse(direction).normalized();
+        }
+
+        // first: map 3D light direction to spherical coordinates
+        float theta = safe_acos(dir.y());
+        float phi   = -std::atan2(dir.z(), dir.x());
+
+        // second: remap to texture coordinates
+        Point2 warped = Point2((phi + Pi) / (2 * Pi), theta / Pi);
+
         // hints:
         // * if (m_transform) { transform direction vector from world to local
         // coordinates }
@@ -42,8 +54,8 @@ public:
         // sun for example)
 
         return {
-            .wi = direction,
-            .weight = E.value * Inv4Pi,
+            .wi       = direction,
+            .weight   = E.value * Inv4Pi,
             .distance = Infinity,
         };
     }
