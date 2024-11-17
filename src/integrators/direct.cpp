@@ -20,14 +20,14 @@ public:
         Ray reverse_light_ray(its.position, sample.wi);
 
         // If light is occluded: return black
-        // light is occluded if there is no intersection from the surface to
+        // light is occluded if there is an intersection from the surface to
         // the light source
         Intersection light_its = m_scene->intersect(reverse_light_ray, rng);
         if (light_its && light_its.t < sample.distance) {
             return Color(0);
         }
 
-        return sample.weight * its.shadingNormal.dot(sample.wi) *
+        return sample.weight * fabs(its.shadingNormal.dot(sample.wi)) *
                its.evaluateBsdf(sample.wi).value;
     }
 
