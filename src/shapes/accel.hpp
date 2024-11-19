@@ -191,7 +191,87 @@ class AccelerationStructure : public Shape {
      */
     void binning(const Node &node, int &bestSplitAxis,
                  float &bestSplitPosition) {
-        NOT_IMPLEMENTED
+        // strucutre to only visit each interval once
+        struct Bin {
+            Bounds bounds;
+            int primitiveCount = 0;
+        };
+
+        // number of bins to use for the SAH heuristic
+        int numBins = 16;
+        // parent cost as best cost
+        float bestCost = node.primitiveCount * surfaceArea(node.aabb);
+
+        // iterate over all axes
+        for (int axis = 0; axis < 3; axis++) {
+            // set bounds of axis
+            float boundsMin = node.aabb.min()[axis];
+            float boundsMax = node.aabb.max()[axis];
+            if (boundsMin == boundsMax)
+                continue;
+
+            // populate bins
+            Bin bins[16];
+            float binScale = numBins / (boundsMax - boundsMin);
+            for (int i = node.firstPrimitiveIndex();
+                 i < node.lastPrimitiveIndex();
+                 i++) {
+                Point centroid = getCentroid(i);
+                int potBinIdx  = (centroid[axis] - boundsMin) * binScale;
+                int binIdx     = min(numBins - 1, potBinIdx);
+                bins[binIdx].primitiveCount++;
+                bins[binIdx].bounds.extend(getBoundingBox(i));
+            }
+
+            // gather data for the planes in between the bins
+            float leftArea[numBins - 1], rightArea[numBins - 1];
+            int leftCount[numBins - 1], rightCount[numBins - 1];
+            Bounds leftBox, rightBox;
+            int leftSum = 0, rightSum = 0;
+            for (int i = 0; i < numBins - 1; i++) {
+                leftSum += bins[i].primitiveCount;
+                leftCount[i] = leftSum;
+                leftBox.extend(bins[i].bounds);
+                leftArea[i] = surfaceArea(leftBox);
+                rightSum += bins[numBins - 1 - i].primitiveCount;
+                rightCount[numBins - 2 - i] = rightSum;
+                rightBox.extend(bins[numBins - 1 - i].bounds);
+                rightArea[numBins - 2 - i] = surfaceArea(rightBox);
+            }
+            // calculate SAH cost for all planes
+            float scale = (boundsMax - boundsMin) / numBins;
+            for (int i = 0; i < numBins - 1; i++) {
+                float planeCost =
+                    leftCount[i] * leftArea[i] + rightCount[i] * rightArea[i];
+                if (planeCost < bestCost) {
+                    bestCost          = planeCost;
+                    bestSplitPosition = boundsMin + scale * (i + 1);
+                    bestSplitAxis     = axis;
+                }
+            }
+        }
+    }
+
+    float evaluateSAH(const Node &node, int axis, float pos) {
+        Bounds leftBox, rightBox;
+        int leftCount = 0, rightCount = 0;
+        for (int i = node.firstPrimitiveIndex(); i < node.lastPrimitiveIndex();
+             i++) {
+            Point centroid = getCentroid(i);
+            if (centroid[axis] < pos) {
+                leftBox.extend(getBoundingBox(i));
+                leftCount++;
+            } else {
+                rightBox.extend(getBoundingBox(i));
+                rightCount++;
+            }
+        }
+        float cost = leftCount * surfaceArea(leftBox) +
+                     rightCount * surfaceArea(rightBox);
+
+        if (cost <= 0)
+            throw std::runtime_error("invalid cost");
+        return cost;
     }
 
     /// @brief Attempts to subdivide a given BVH node.
@@ -202,7 +282,7 @@ class AccelerationStructure : public Shape {
         }
 
         // set to true when implementing binning
-        static constexpr bool UseSAH = false;
+        static constexpr bool UseSAH = true;
 
         int splitAxis = -1;
         float splitPosition;
@@ -309,8 +389,9 @@ public:
                    Sampler &rng) const override {
         if (m_primitiveIndices.empty())
             return false; // exit early if no children exist
-        if (intersectAABB(rootNode().aabb, ray) <
-            its.t) // test root bounding box for potential hit
+        if (intersectAABB(rootNode().aabb, ray) < its.t) // test root bounding
+                                                         // box for potential
+                                                         // hit
             return intersectNode(rootNode(), ray, its, rng);
         return false;
     }
