@@ -46,12 +46,14 @@ public:
 
         // first we transform the uv coordinates into image coordinates x, y
         auto resolution = m_image->resolution();
-        float x_float   = u * (resolution.x() - 1);
-        float y_float   = v * (resolution.y() - 1);
+        float x_float   = u * resolution.x() - 0.5f;
+        float y_float   = v * resolution.y() -
+                        0.5f; // we have to add the - 0.5 to account for the
+                              // difference of uv and the center of the pixels
 
         if (m_filter == FilterMode::Nearest) {
-            int x = floorf(x_float + 0.5);
-            int y = floorf(y_float + 0.5);
+            int x = roundf(x_float);
+            int y = roundf(y_float);
 
             switch (m_border) {
             case BorderMode::Clamp:
