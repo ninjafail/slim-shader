@@ -18,6 +18,9 @@ class ImageTexture : public Texture {
     BorderMode m_border;
     FilterMode m_filter;
 
+    int sane_mod(int x, int y) const { return (x % y + y) % y; }
+    float sane_mod(float x, int y) const { return fmod(fmodf(x, y) + y, y); }
+
 public:
     ImageTexture(const Properties &properties) {
         if (properties.has("filename")) {
@@ -63,14 +66,15 @@ public:
             case BorderMode::Repeat:
                 // mod can yield negative results, so some additional handling
                 // is required
-                x = (x % resolution.x() + resolution.x()) % resolution.x();
-                y = (y % resolution.y() + resolution.y()) % resolution.y();
+                x = sane_mod(x, resolution.x());
+                y = sane_mod(y, resolution.y());
                 break;
             }
 
             Color color = m_image->get(Point2i(x, y));
             return color * m_exposure;
         } else if (m_filter == FilterMode::Bilinear) {
+            // the integer coordinates surrounding the texture hit point
             int x_0 = floorf(x_float);
             int y_0 = floorf(y_float);
             int x_1 = x_0 + 1;
@@ -88,15 +92,12 @@ public:
             case BorderMode::Repeat:
                 // mod can yield negative results, so some additional handling
                 // is required
-                x_float = fmod(fmod(x_float, resolution.x()) + resolution.x(),
-                               resolution.x());
-                y_float = fmod(fmod(y_float, resolution.y()) + resolution.y(),
-                               resolution.y());
-                y_0 = (y_0 % resolution.y() + resolution.y()) % resolution.y();
-                x_0 = (x_0 % resolution.x() + resolution.x()) % resolution.x();
-                y_0 = (y_0 % resolution.y() + resolution.y()) % resolution.y();
-                x_1 = (x_1 % resolution.x() + resolution.x()) % resolution.x();
-                y_1 = (y_1 % resolution.y() + resolution.y()) % resolution.y();
+                x_float = sane_mod(x_float, resolution.x());
+                y_float = sane_mod(y_float, resolution.y());
+                x_0     = sane_mod(x_0, resolution.x());
+                y_0     = sane_mod(y_0, resolution.y());
+                x_1     = sane_mod(x_1, resolution.x());
+                y_1     = sane_mod(y_1, resolution.y());
                 break;
             }
 

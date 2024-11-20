@@ -202,6 +202,8 @@ class AccelerationStructure : public Shape {
         // parent cost as best cost
         float bestCost = node.primitiveCount * surfaceArea(node.aabb);
 
+        bestSplitAxis = -1;
+
         // iterate over all axes
         for (int axis = 0; axis < 3; axis++) {
             // set bounds of axis
@@ -211,13 +213,13 @@ class AccelerationStructure : public Shape {
                 continue;
 
             // populate bins
-            Bin bin[16];
+            Bin bin[BINS];
             float binScale = BINS / (boundsMax - boundsMin);
             for (int i = 0; i < node.primitiveCount; i++) {
-                int priIdx = m_primitiveIndices[node.leftFirst + i];
+                int priIdx     = m_primitiveIndices[node.leftFirst + i];
                 Point centroid = getCentroid(priIdx);
 
-                int axisBinIdx  = (centroid[axis] - boundsMin) * binScale;
+                int axisBinIdx = (centroid[axis] - boundsMin) * binScale;
                 int binIdx     = min(BINS - 1, axisBinIdx);
                 bin[binIdx].primitiveCount++;
                 bin[binIdx].bounds.extend(getBoundingBox(priIdx));
@@ -255,28 +257,6 @@ class AccelerationStructure : public Shape {
                 }
             }
         }
-    }
-
-    float evaluateSAH(const Node &node, int axis, float pos) {
-        Bounds leftBox, rightBox;
-        int leftCount = 0, rightCount = 0;
-        for (int i = node.firstPrimitiveIndex(); i < node.lastPrimitiveIndex();
-             i++) {
-            Point centroid = getCentroid(i);
-            if (centroid[axis] < pos) {
-                leftBox.extend(getBoundingBox(i));
-                leftCount++;
-            } else {
-                rightBox.extend(getBoundingBox(i));
-                rightCount++;
-            }
-        }
-        float cost = leftCount * surfaceArea(leftBox) +
-                     rightCount * surfaceArea(rightBox);
-
-        if (cost <= 0)
-            throw std::runtime_error("invalid cost");
-        return cost;
     }
 
     /// @brief Attempts to subdivide a given BVH node.
