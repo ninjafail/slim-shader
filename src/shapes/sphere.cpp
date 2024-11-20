@@ -8,8 +8,8 @@ class Sphere : public Shape {
 
         // map the position from [-1,-1,0]..[+1,+1,0] to [0,0]..[1,1] by
         // discarding the z component and rescaling
-        surf.uv.x() = (position.x() + 1) / 2;
-        surf.uv.y() = (position.y() + 1) / 2;
+        surf.uv.x() = 0.5 + (atan2(position.x(), position.z()) / (2 * Pi));
+        surf.uv.y() = 0.5 - (asin(position.y()) / Pi);
 
         // the normal is the vector from origin (0, 0, 0) to the intersection
         // point, it is already normalized bc sphere has radius 1

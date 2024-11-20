@@ -52,7 +52,7 @@ protected:
         Vector pvec = dir.cross(v0v2);
         float det   = v0v1.dot(pvec);
 
-        if (fabs(det) < 1e-5f)
+        if (fabs(det) < 0)
             return false;
 
         float invDet = 1 / det;
@@ -74,14 +74,13 @@ protected:
 
         its.t        = t;
         its.position = ray(t);
-        its.uv.x()   = u;
-        its.uv.y()   = v;
+        Vertex interpolated = Vertex::interpolate(Vector2(u, v), v0, v1, v2);
+        its.uv  = interpolated.uv;
 
         its.tangent        = v0v1.normalized();
         its.geometryNormal = v0v1.cross(v0v2).normalized();
         if (m_smoothNormals) {
-            its.shadingNormal = Vertex::interpolate(Vector2(u, v), v0, v1, v2)
-                                    .normal.normalized();
+            its.shadingNormal = interpolated.normal.normalized();
         } else {
             its.shadingNormal = its.geometryNormal;
         }

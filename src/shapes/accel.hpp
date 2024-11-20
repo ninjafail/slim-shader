@@ -191,7 +191,72 @@ class AccelerationStructure : public Shape {
      */
     void binning(const Node &node, int &bestSplitAxis,
                  float &bestSplitPosition) {
-        NOT_IMPLEMENTED
+        // strucutre to only visit each interval once
+        struct Bin {
+            Bounds bounds;
+            int primitiveCount = 0;
+        };
+
+        // number of bins to use for the SAH heuristic
+        const int BINS = 16;
+        // parent cost as best cost
+        float bestCost = node.primitiveCount * surfaceArea(node.aabb);
+
+        bestSplitAxis = -1;
+
+        // iterate over all axes
+        for (int axis = 0; axis < 3; axis++) {
+            // set bounds of axis
+            float boundsMin = node.aabb.min()[axis];
+            float boundsMax = node.aabb.max()[axis];
+            if (boundsMin == boundsMax)
+                continue;
+
+            // populate bins
+            Bin bin[BINS];
+            float binScale = BINS / (boundsMax - boundsMin);
+            for (int i = 0; i < node.primitiveCount; i++) {
+                int priIdx     = m_primitiveIndices[node.leftFirst + i];
+                Point centroid = getCentroid(priIdx);
+
+                int axisBinIdx = (centroid[axis] - boundsMin) * binScale;
+                int binIdx     = min(BINS - 1, axisBinIdx);
+                bin[binIdx].primitiveCount++;
+                bin[binIdx].bounds.extend(getBoundingBox(priIdx));
+            }
+
+            // gather data for the planes in between the bins
+            float leftArea[BINS - 1], rightArea[BINS - 1];
+            int leftCount[BINS - 1], rightCount[BINS - 1];
+            Bounds leftBox, rightBox;
+            int leftSum = 0, rightSum = 0;
+            for (int i = 0; i < BINS - 1; i++) {
+                // calculate left values from left to right
+                leftSum += bin[i].primitiveCount;
+                leftCount[i] = leftSum;
+                leftBox.extend(bin[i].bounds);
+                leftArea[i] = surfaceArea(leftBox);
+
+                // calculate right values from right to left
+                int right_i = BINS - 2 - i;
+                rightSum += bin[right_i].primitiveCount;
+                rightCount[right_i] = rightSum;
+                rightBox.extend(bin[right_i].bounds);
+                rightArea[right_i] = surfaceArea(rightBox);
+            }
+
+            // calculate SAH cost for all planes
+            float scale = (boundsMax - boundsMin) / BINS;
+            for (int i = 0; i < BINS - 1; i++) {
+                float planeCost =
+                    leftCount[i] * leftArea[i] + rightCount[i] * rightArea[i];
+                if (planeCost < bestCost) {
+                    bestCost          = planeCost;
+                    bestSplitPosition = boundsMin + scale * (i + 1);
+                    bestSplitAxis     = axis;
+                }
+            }
+        }
     }
 
     /// @brief Attempts to subdivide a given BVH node.
@@ -202,7 +267,7 @@ class AccelerationStructure : public Shape {
         }
 
         // set to true when implementing binning
-        static constexpr bool UseSAH = false;
+        static constexpr bool UseSAH = true;
 
         int splitAxis = -1;
         float splitPosition;
@@ -309,8 +374,9 @@ public:
                    Sampler &rng) const override {
         if (m_primitiveIndices.empty())
             return false; // exit early if no children exist
-        if (intersectAABB(rootNode().aabb, ray) <
-            its.t) // test root bounding box for potential hit
+        if (intersectAABB(rootNode().aabb, ray) < its.t) // test root bounding
+                                                         // box for potential
+                                                         // hit
             return intersectNode(rootNode(), ray, its, rng);
         return false;
     }

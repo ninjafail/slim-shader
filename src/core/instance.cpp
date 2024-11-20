@@ -15,8 +15,6 @@ void Instance::transformFrame(SurfaceEvent &surf, const Vector &wo) const {
     surf.geometryNormal =
         m_transform->applyNormal(shadingFrame.normal).normalized();
     surf.shadingNormal = surf.geometryNormal;
-
-    // TODO: maybe change pdf
 }
 
 inline void validateIntersection(const Intersection &its) {
