@@ -198,7 +198,7 @@ class AccelerationStructure : public Shape {
         };
 
         // number of bins to use for the SAH heuristic
-        int numBins = 16;
+        const int BINS = 16;
         // parent cost as best cost
         float bestCost = node.primitiveCount * surfaceArea(node.aabb);
 
@@ -211,36 +211,41 @@ class AccelerationStructure : public Shape {
                 continue;
 
             // populate bins
-            Bin bins[16];
-            float binScale = numBins / (boundsMax - boundsMin);
-            for (int i = node.firstPrimitiveIndex();
-                 i < node.lastPrimitiveIndex();
-                 i++) {
-                Point centroid = getCentroid(i);
-                int potBinIdx  = (centroid[axis] - boundsMin) * binScale;
-                int binIdx     = min(numBins - 1, potBinIdx);
-                bins[binIdx].primitiveCount++;
-                bins[binIdx].bounds.extend(getBoundingBox(i));
+            Bin bin[16];
+            float binScale = BINS / (boundsMax - boundsMin);
+            for (int i = 0; i < node.primitiveCount; i++) {
+                int priIdx = m_primitiveIndices[node.leftFirst + i];
+                Point centroid = getCentroid(priIdx);
+
+                int axisBinIdx  = (centroid[axis] - boundsMin) * binScale;
+                int binIdx     = min(BINS - 1, axisBinIdx);
+                bin[binIdx].primitiveCount++;
+                bin[binIdx].bounds.extend(getBoundingBox(priIdx));
             }
 
             // gather data for the planes in between the bins
-            float leftArea[numBins - 1], rightArea[numBins - 1];
-            int leftCount[numBins - 1], rightCount[numBins - 1];
+            float leftArea[BINS - 1], rightArea[BINS - 1];
+            int leftCount[BINS - 1], rightCount[BINS - 1];
             Bounds leftBox, rightBox;
             int leftSum = 0, rightSum = 0;
-            for (int i = 0; i < numBins - 1; i++) {
-                leftSum += bins[i].primitiveCount;
+            for (int i = 0; i < BINS - 1; i++) {
+                // calculate left values from left to right
+                leftSum += bin[i].primitiveCount;
                 leftCount[i] = leftSum;
-                leftBox.extend(bins[i].bounds);
+                leftBox.extend(bin[i].bounds);
                 leftArea[i] = surfaceArea(leftBox);
-                rightSum += bins[numBins - 1 - i].primitiveCount;
-                rightCount[numBins - 2 - i] = rightSum;
-                rightBox.extend(bins[numBins - 1 - i].bounds);
-                rightArea[numBins - 2 - i] = surfaceArea(rightBox);
+
+                // calculate right values from right to left
+                int right_i = BINS - 2 - i;
+                rightSum += bin[right_i].primitiveCount;
+                rightCount[right_i] = rightSum;
+                rightBox.extend(bin[right_i].bounds);
+                rightArea[right_i] = surfaceArea(rightBox);
             }
+
             // calculate SAH cost for all planes
-            float scale = (boundsMax - boundsMin) / numBins;
-            for (int i = 0; i < numBins - 1; i++) {
+            float scale = (boundsMax - boundsMin) / BINS;
+            for (int i = 0; i < BINS - 1; i++) {
                 float planeCost =
                     leftCount[i] * leftArea[i] + rightCount[i] * rightArea[i];
                 if (planeCost < bestCost) {
