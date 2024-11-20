@@ -188,6 +188,8 @@ class AccelerationStructure : public Shape {
      * exists
      * @param out bestSplitPosition The optimal split position, undefined if no
      * useful split exists
+     * We used the given blog article
+     * https://jacco.ompf2.com/2022/04/21/how-to-build-a-bvh-part-3-quick-builds/
      */
     void binning(const Node &node, int &bestSplitAxis,
                  float &bestSplitPosition) {
