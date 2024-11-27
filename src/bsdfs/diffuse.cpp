@@ -12,7 +12,8 @@ public:
 
     BsdfEval evaluate(const Point2 &uv, const Vector &wo,
                       const Vector &wi) const override {
-        Color color = m_albedo->evaluate(uv) / Pi;
+        // TODO: check if wi and wo are in same hemisphere
+        Color color = m_albedo->evaluate(uv) * InvPi;
         return BsdfEval{ .value = color };
     }
 

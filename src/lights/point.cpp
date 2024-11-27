@@ -5,19 +5,20 @@ namespace lightwave {
 class PointLight final : public Light {
     Point position;
     Color power;
+    Color intensity;
 
 public:
     PointLight(const Properties &properties) : Light(properties) {
-        position = properties.get<Point>("position");
-        power    = properties.get<Color>("power");
+        position  = properties.get<Point>("position");
+        power     = properties.get<Color>("power");
+        intensity = power * Inv4Pi;
     }
 
     DirectLightSample sampleDirect(const Point &origin,
                                    Sampler &rng) const override {
-        Color intensity = power / (4 * Pi);
-        Vector dir      = position - origin;
-        float distance  = dir.length();
-        float falloff   = 1 / (distance * distance);
+        Vector dir     = position - origin;
+        float distance = dir.length();
+        float falloff  = 1 / (distance * distance);
         return DirectLightSample{ .wi       = dir.normalized(),
                                   .weight   = intensity * falloff,
                                   .distance = distance };

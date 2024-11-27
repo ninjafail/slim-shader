@@ -28,7 +28,7 @@ public:
         float phi   = -std::atan2(dir.z(), dir.x());
 
         // second: remap to texture coordinates
-        Point2 warped = Point2((phi + Pi) / (2 * Pi), theta / Pi);
+        Point2 warped = Point2((phi + Pi) * Inv2Pi, theta * InvPi);
 
         // hints:
         // * if (m_transform) { transform direction vector from world to local
