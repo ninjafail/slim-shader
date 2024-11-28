@@ -11,7 +11,12 @@ public:
     }
 
     EmissionEval evaluate(const Point2 &uv, const Vector &wo) const override {
-        NOT_IMPLEMENTED
+        // Only emit from the front side
+        if (wo.z() <= 0)
+            return EmissionEval{ .value = Color(0) };
+        Color color = m_emission->evaluate(uv);
+
+        return EmissionEval{ .value = color };
     }
 
     std::string toString() const override {
