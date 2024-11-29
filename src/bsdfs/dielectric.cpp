@@ -25,7 +25,32 @@ public:
 
     BsdfSample sample(const Point2 &uv, const Vector &wo,
                       Sampler &rng) const override {
-        NOT_IMPLEMENTED
+        // Compute Fresnel term
+        float ior       = m_ior->scalar(uv);
+        float cos_theta = Frame::cosTheta(wo);
+        float fresnel   = fresnelDielectric(cos_theta, ior);
+
+        // Decide whether to reflect or refract
+        float dec = rng.next();
+        Vector wi;
+        Color color;
+        if (dec <= fresnel) {
+            // Reflect
+            wi    = reflect(wo, Vector(0, 0, 1));
+            color = m_reflectance.get()->evaluate(uv);
+        } else {
+            // Refract
+            if (cos_theta < 0) {
+                ior = 1 / ior;
+            }
+            wi    = refract(wo, Vector(0, 0, 1), ior);
+            color = m_transmittance.get()->evaluate(uv) / (sqr(ior));
+            if (wi == Vector(0)) { // TIR occurs
+                wi    = reflect(wo, Vector(0, 0, 1));
+                color = m_reflectance.get()->evaluate(uv);
+            }
+        }
+        return BsdfSample{ wi, color };
     }
 
     std::string toString() const override {
