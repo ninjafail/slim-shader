@@ -29,7 +29,7 @@ public:
         if (!Frame::sameHemisphere(wo, out_dir)) {
             out_dir.z() *= -1;
         }
-        // The functions indicate that cosineHemispherePdf = z * InvPi and 
+        // The functions indicate that cosineHemispherePdf = z * InvPi and
         // Frame::absCosTheta(vec) = vec.z(). Thus when dividing by the pdf,
         // the InvPi and Frame::absCosTheta(out_dir) cancel out, leaving us with
         // with the albedo value.
