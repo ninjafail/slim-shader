@@ -10,6 +10,7 @@ class Dielectric : public Bsdf {
 
 public:
     Dielectric(const Properties &properties) {
+        // index of refraction
         m_ior           = properties.get<Texture>("ior");
         m_reflectance   = properties.get<Texture>("reflectance");
         m_transmittance = properties.get<Texture>("transmittance");
@@ -28,7 +29,14 @@ public:
         // Compute Fresnel term
         float ior       = m_ior->scalar(uv);
         float cos_theta = Frame::cosTheta(wo);
-        float fresnel   = fresnelDielectric(cos_theta, ior);
+        Vector normal   = Vector(0, 0, 1);
+        // Potentially flip the orientation for snells law
+        if (cos_theta < 0) {
+            ior       = 1 / ior;
+            normal    = -normal;
+            cos_theta = -cos_theta;
+        }
+        float fresnel = fresnelDielectric(cos_theta, ior);
 
         // Decide whether to reflect or refract
         float dec = rng.next();
@@ -36,21 +44,18 @@ public:
         Color color;
         if (dec <= fresnel) {
             // Reflect
-            wi    = reflect(wo, Vector(0, 0, 1));
-            color = m_reflectance.get()->evaluate(uv);
+            wi    = reflect(wo, normal);
+            color = m_reflectance->evaluate(uv);
         } else {
             // Refract
-            if (cos_theta < 0) {
-                ior = 1 / ior;
-            }
-            wi    = refract(wo, Vector(0, 0, 1), ior);
-            color = m_transmittance.get()->evaluate(uv) / (sqr(ior));
+            wi    = refract(wo, normal, ior);
+            color = m_transmittance->evaluate(uv) / (sqr(ior));
             if (wi == Vector(0)) { // TIR occurs
-                wi    = reflect(wo, Vector(0, 0, 1));
-                color = m_reflectance.get()->evaluate(uv);
+                wi    = reflect(wo, normal);
+                color = m_reflectance->evaluate(uv);
             }
         }
-        return BsdfSample{ wi, color };
+        return BsdfSample{ wi.normalized(), color };
     }
 
     std::string toString() const override {
