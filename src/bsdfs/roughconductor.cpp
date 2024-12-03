@@ -21,7 +21,16 @@ public:
         // extremely specular distributions (alpha values below 10^-3)
         const auto alpha = std::max(float(1e-3), sqr(m_roughness->scalar(uv)));
 
-        NOT_IMPLEMENTED
+        Vector wm       = (wi + wo).normalized();
+        Color refl      = m_reflectance.get()->evaluate(uv);
+        float dist      = microfacet::evaluateGGX(alpha, wm);
+        float gi        = microfacet::smithG1(alpha, wm, wi);
+        float go        = microfacet::smithG1(alpha, wm, wo);
+        float cos_theta = Frame::absCosTheta(wo);
+
+        Color color = (refl * dist * gi * go) / (4 * cos_theta);
+
+        return BsdfEval{ color };
 
         // hints:
         // * the microfacet normal can be computed from `wi' and `wo'
@@ -31,7 +40,15 @@ public:
                       Sampler &rng) const override {
         const auto alpha = std::max(float(1e-3), sqr(m_roughness->scalar(uv)));
 
-        NOT_IMPLEMENTED
+        Vector n  = microfacet::sampleGGXVNDF(alpha, wo, rng.next2D());
+        Vector wi = reflect(wo, n);
+
+        Vector wm = (wi + wo).normalized();
+        float gi  = microfacet::smithG1(alpha, wm, wi);
+
+        Color color = m_reflectance.get()->evaluate(uv) * gi;
+
+        return BsdfSample{ wi, color };
 
         // hints:
         // * do not forget to cancel out as many terms from your equations as
