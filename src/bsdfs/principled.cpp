@@ -9,7 +9,12 @@ struct DiffuseLobe {
     Color color;
 
     BsdfEval evaluate(const Vector &wo, const Vector &wi) const {
-        NOT_IMPLEMENTED
+        // Check if we and wo are in same hemisphere
+        if (!Frame::sameHemisphere(wo, wi)) {
+            return BsdfEval::invalid();
+        }
+        Color result = color * InvPi * Frame::absCosTheta(wi.normalized());
+        return BsdfEval{ .value = result };
 
         // hints:
         // * copy your diffuse bsdf evaluate here
@@ -17,7 +22,17 @@ struct DiffuseLobe {
     }
 
     BsdfSample sample(const Vector &wo, Sampler &rng) const {
-        NOT_IMPLEMENTED
+        // First sample ray direction
+        Vector out_dir = squareToCosineHemisphere(rng.next2D());
+        // sometimes we get a ray direction that is not in the same hemisphere
+        if (!Frame::sameHemisphere(wo, out_dir)) {
+            out_dir.z() *= -1;
+        }
+        // The functions indicate that cosineHemispherePdf = z * InvPi and
+        // Frame::absCosTheta(vec) = vec.z(). Thus when dividing by the pdf,
+        // the InvPi and Frame::absCosTheta(out_dir) cancel out, leaving us with
+        // with the albedo value.
+        return BsdfSample{ .wi = out_dir, .weight = color };
 
         // hints:
         // * copy your diffuse bsdf evaluate here
@@ -30,7 +45,16 @@ struct MetallicLobe {
     Color color;
 
     BsdfEval evaluate(const Vector &wo, const Vector &wi) const {
-        NOT_IMPLEMENTED
+        Vector wm       = (wi + wo).normalized();
+        Color refl      = color;
+        float dist      = microfacet::evaluateGGX(alpha, wm);
+        float gi        = microfacet::smithG1(alpha, wm, wi);
+        float go        = microfacet::smithG1(alpha, wm, wo);
+        float cos_theta = Frame::absCosTheta(wo);
+
+        Color result = (refl * dist * gi * go) / (4 * cos_theta);
+
+        return BsdfEval{ result };
 
         // hints:
         // * copy your roughconductor bsdf evaluate here
@@ -40,7 +64,15 @@ struct MetallicLobe {
     }
 
     BsdfSample sample(const Vector &wo, Sampler &rng) const {
-        NOT_IMPLEMENTED
+        Vector n  = microfacet::sampleGGXVNDF(alpha, wo, rng.next2D());
+        Vector wi = reflect(wo, n);
+
+        Vector wm = (wi + wo).normalized();
+        float gi  = microfacet::smithG1(alpha, wm, wi);
+
+        Color result = color * gi;
+
+        return BsdfSample{ wi, result };
 
         // hints:
         // * copy your roughconductor bsdf sample here
@@ -102,7 +134,13 @@ public:
         PROFILE("Principled")
 
         const auto combination = combine(uv, wo);
-        NOT_IMPLEMENTED
+
+        auto diff_eval   = combination.diffuse.evaluate(wo, wi);
+        auto metall_eval = combination.metallic.evaluate(wo, wi);
+
+        Color color = diff_eval.value + metall_eval.value;
+
+        return BsdfEval{ color };
 
         // hint: evaluate `combination.diffuse` and `combination.metallic` and
         // combine their results
@@ -113,21 +151,38 @@ public:
         PROFILE("Principled")
 
         const auto combination = combine(uv, wo);
-        NOT_IMPLEMENTED
+
+        BsdfSample sample;
+        Color weight;
+
+        float dec          = rng.next();
+        float diffuse_prob = combination.diffuseSelectionProb;
+        if (dec <= combination.diffuseSelectionProb) {
+            sample = combination.diffuse.sample(wo, rng);
+            weight = sample.weight * diffuse_prob;
+        } else {
+            sample = combination.metallic.sample(wo, rng);
+            weight = sample.weight * (1 - diffuse_prob);
+        }
+
+        return BsdfSample{ sample.wi, weight };
 
         // hint: sample either `combination.diffuse` (probability
         // `combination.diffuseSelectionProb`) or `combination.metallic`
     }
 
     std::string toString() const override {
-        return tfm::format("Principled[\n"
-                           "  baseColor = %s,\n"
-                           "  roughness = %s,\n"
-                           "  metallic  = %s,\n"
-                           "  specular  = %s,\n"
-                           "]",
-                           indent(m_baseColor), indent(m_roughness),
-                           indent(m_metallic), indent(m_specular));
+        return tfm::format(
+            "Principled[\n"
+            "  baseColor = %s,\n"
+            "  roughness = %s,\n"
+            "  metallic  = %s,\n"
+            "  specular  = %s,\n"
+            "]",
+            indent(m_baseColor),
+            indent(m_roughness),
+            indent(m_metallic),
+            indent(m_specular));
     }
 };
 
