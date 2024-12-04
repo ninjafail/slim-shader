@@ -159,10 +159,10 @@ public:
         float diffuse_prob = combination.diffuseSelectionProb;
         if (dec <= combination.diffuseSelectionProb) {
             sample = combination.diffuse.sample(wo, rng);
-            weight = sample.weight * diffuse_prob;
+            weight = sample.weight / diffuse_prob;
         } else {
             sample = combination.metallic.sample(wo, rng);
-            weight = sample.weight * (1 - diffuse_prob);
+            weight = sample.weight / (1 - diffuse_prob);
         }
 
         return BsdfSample{ sample.wi, weight };
