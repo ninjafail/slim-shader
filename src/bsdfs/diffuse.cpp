@@ -33,7 +33,8 @@ public:
         // Frame::absCosTheta(vec) = vec.z(). Thus when dividing by the pdf,
         // the InvPi and Frame::absCosTheta(out_dir) cancel out, leaving us with
         // with the albedo value.
-        return BsdfSample{ .wi = out_dir, .weight = m_albedo->evaluate(uv) };
+        return BsdfSample{ .wi     = out_dir.normalized(),
+                           .weight = m_albedo->evaluate(uv) };
     }
 
     std::string toString() const override {

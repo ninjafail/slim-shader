@@ -16,12 +16,8 @@ class Sphere : public Shape {
         surf.shadingNormal  = Vector(position);
         surf.geometryNormal = Vector(position);
 
-        // define tangent with the cross product of the normal and (1, 0, 0) if
-        // the intersection is on the y axis and with (0, 1, 0) otherwise
-        if (position.x() == 0)
-            surf.tangent = Vector(position).cross(Vector(1, 0, 0)).normalized();
-        else
-            surf.tangent = Vector(position).cross(Vector(0, 1, 0)).normalized();
+        Vector bitangent;
+        buildOrthonormalBasis(surf.geometryNormal, surf.tangent, bitangent);
     }
 
 public:
