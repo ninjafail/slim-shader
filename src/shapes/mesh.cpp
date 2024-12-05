@@ -78,13 +78,13 @@ protected:
         its.uv              = interpolated.uv;
 
         its.geometryNormal = v0v1.cross(v0v2).normalized();
-        Vector bitangent;
-        buildOrthonormalBasis(its.geometryNormal, its.tangent, bitangent);
         if (m_smoothNormals) {
             its.shadingNormal = interpolated.normal.normalized();
         } else {
             its.shadingNormal = its.geometryNormal;
         }
+        Vector bitangent;
+        buildOrthonormalBasis(its.shadingNormal, its.tangent, bitangent);
         its.pdf = 0;
 
         return true;

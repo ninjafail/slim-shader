@@ -32,7 +32,7 @@ struct DiffuseLobe {
         // Frame::absCosTheta(vec) = vec.z(). Thus when dividing by the pdf,
         // the InvPi and Frame::absCosTheta(out_dir) cancel out, leaving us with
         // with the albedo value.
-        return BsdfSample{ .wi = out_dir, .weight = color };
+        return BsdfSample{ .wi = out_dir.normalized(), .weight = color };
 
         // hints:
         // * copy your diffuse bsdf evaluate here
@@ -72,7 +72,7 @@ struct MetallicLobe {
 
         Color result = color * gi;
 
-        return BsdfSample{ wi, result };
+        return BsdfSample{ wi.normalized(), result };
 
         // hints:
         // * copy your roughconductor bsdf sample here
@@ -165,7 +165,7 @@ public:
             weight = sample.weight / (1 - diffuse_prob);
         }
 
-        return BsdfSample{ sample.wi, weight };
+        return BsdfSample{ sample.wi.normalized(), weight };
 
         // hint: sample either `combination.diffuse` (probability
         // `combination.diffuseSelectionProb`) or `combination.metallic`
