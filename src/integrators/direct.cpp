@@ -5,7 +5,7 @@ class DirectIntegrator : public SamplingIntegrator {
     Color LiLightSample(const Intersection &its, Sampler &rng) {
         LightSample light = m_scene->sampleLight(rng);
 
-        if (light.isInvalid()) {
+        if (light.isInvalid() || light.probability < Epsilon) {
             return Color(0);
         }
         DirectLightSample sample = light.light->sampleDirect(its.position, rng);

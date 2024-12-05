@@ -157,7 +157,7 @@ public:
 
         float dec          = rng.next();
         float diffuse_prob = combination.diffuseSelectionProb;
-        if (dec <= combination.diffuseSelectionProb) {
+        if (dec < combination.diffuseSelectionProb) {
             sample = combination.diffuse.sample(wo, rng);
             weight = sample.weight / diffuse_prob;
         } else {
