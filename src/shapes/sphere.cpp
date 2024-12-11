@@ -4,18 +4,20 @@ namespace lightwave {
 class Sphere : public Shape {
     inline void populate(SurfaceEvent &surf, const Point &position) const {
         surf.position = position;
-        surf.pdf      = 0; // for now (stated in the assignment)
+        surf.pdf      = Inv4Pi;
 
         // map the position from [-1,-1,0]..[+1,+1,0] to [0,0]..[1,1] by
         // discarding the z component and rescaling
-        surf.uv.x() = 0.5 + (std::atan2(position.x(), position.z()) / (2 * Pi));
-        surf.uv.y() = 0.5 - (asin(position.y()) / Pi);
+        surf.uv.x() = 0.5 + (std::atan2(position.x(), position.z()) * Inv2Pi);
+        surf.uv.y() = 0.5 - (asin(position.y()) * InvPi);
 
         // the normal is the vector from origin (0, 0, 0) to the intersection
         // point, it is already normalized bc sphere has radius 1
         surf.shadingNormal  = Vector(position);
         surf.geometryNormal = Vector(position);
 
+        // Remark: should be working with buildOrthonormalBasis(shadingNormal,
+        // surf.tangent, surf.bitangent); but error gets a bit too high
         // define tangent with the cross product of the normal and (1, 0, 0) if
         // the intersection is on the y axis and with (0, 1, 0) otherwise
         if (position.x() == 0)

@@ -72,18 +72,19 @@ protected:
         if (t < Epsilon || t > its.t)
             return false;
 
-        its.t        = t;
-        its.position = ray(t);
+        its.t               = t;
+        its.position        = ray(t);
         Vertex interpolated = Vertex::interpolate(Vector2(u, v), v0, v1, v2);
-        its.uv  = interpolated.uv;
+        its.uv              = interpolated.uv;
 
-        its.tangent        = v0v1.normalized();
         its.geometryNormal = v0v1.cross(v0v2).normalized();
         if (m_smoothNormals) {
             its.shadingNormal = interpolated.normal.normalized();
         } else {
             its.shadingNormal = its.geometryNormal;
         }
+        Vector bitangent;
+        buildOrthonormalBasis(its.shadingNormal, its.tangent, bitangent);
         its.pdf = 0;
 
         return true;
