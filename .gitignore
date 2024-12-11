@@ -6,6 +6,9 @@ __pycache__
 /.vs
 /out
 /scenes
+/blender_exporter_task/meshes
+/blender_exporter_task/textures
+*.blend
 
 /docs/html
 /docs/latex
