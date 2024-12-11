@@ -4,7 +4,7 @@ namespace lightwave {
 class Sphere : public Shape {
     inline void populate(SurfaceEvent &surf, const Point &position) const {
         surf.position = position;
-        surf.pdf      = 0; // for now (stated in the assignment)
+        surf.pdf      = Inv4Pi;
 
         // map the position from [-1,-1,0]..[+1,+1,0] to [0,0]..[1,1] by
         // discarding the z component and rescaling
@@ -16,8 +16,14 @@ class Sphere : public Shape {
         surf.shadingNormal  = Vector(position);
         surf.geometryNormal = Vector(position);
 
-        Vector bitangent;
-        buildOrthonormalBasis(surf.geometryNormal, surf.tangent, bitangent);
+        // Remark: should be working with buildOrthonormalBasis(shadingNormal,
+        // surf.tangent, surf.bitangent); but error gets a bit too high
+        // define tangent with the cross product of the normal and (1, 0, 0) if
+        // the intersection is on the y axis and with (0, 1, 0) otherwise
+        if (position.x() == 0)
+            surf.tangent = Vector(position).cross(Vector(1, 0, 0)).normalized();
+        else
+            surf.tangent = Vector(position).cross(Vector(0, 1, 0)).normalized();
     }
 
 public:

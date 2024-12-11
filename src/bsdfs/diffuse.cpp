@@ -26,6 +26,8 @@ public:
         // First sample ray direction
         Vector out_dir = squareToCosineHemisphere(rng.next2D());
         // sometimes we get a ray direction that is not in the same hemisphere
+        // Remark: sample solution uses cosTheta(wo) to check hemisphere and 
+        // flips whole vector
         if (!Frame::sameHemisphere(wo, out_dir)) {
             out_dir.z() *= -1;
         }

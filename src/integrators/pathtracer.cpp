@@ -52,6 +52,7 @@ public:
             // Sample direction w_i to continue the path
             BsdfSample bsdf_sample = cur_its.sampleBsdf(rng);
             if (bsdf_sample.isInvalid()) {
+                li += cur_li * cur_weigth;
                 break;
             }
             // Trace ray to find next point
