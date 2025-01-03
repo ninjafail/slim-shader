@@ -12,8 +12,17 @@ void Instance::transformFrame(SurfaceEvent &surf, const Vector &wo) const {
 
     Frame shadingFrame = surf.shadingFrame();
     surf.tangent       = shadingFrame.tangent.normalized();
+    if (m_normal) {
+        // perturb the normal: we need to map the texture color to a vector
+        // which requires a transformation from [0,1] to [-1,1]
+        Color normalC = m_normal->evaluate(surf.uv);
+        Vector normal =
+            2.f * Vector(normalC.r(), normalC.g(), normalC.b()) - Vector(1.f);
+        shadingFrame.normal = normal.normalized();
+    }
     surf.geometryNormal =
         m_transform->applyNormal(shadingFrame.normal).normalized();
+
     surf.shadingNormal = surf.geometryNormal;
 }
 
