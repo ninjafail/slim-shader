@@ -63,7 +63,7 @@ public:
 
             Ray world_ray = m_transform->apply(local_ray);
 
-            return CameraSample{ .ray = local_ray, .weight = Color(1.0f) };
+            return CameraSample{ .ray = world_ray, .weight = Color(1.0f) };
         }
 
         Ray world_ray = m_transform->apply(local_ray);
