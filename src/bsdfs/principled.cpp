@@ -160,21 +160,23 @@ public:
         const auto combination = combine(uv, wo);
 
         BsdfSample sample;
-        Color weight;
 
         float dec          = rng.next();
         float diffuse_prob = combination.diffuseSelectionProb;
+        float pdf;
         if (dec < combination.diffuseSelectionProb) {
             sample = combination.diffuse.sample(wo, rng);
-            weight = sample.weight / diffuse_prob;
+            pdf    = diffuse_prob;
         } else {
             sample = combination.metallic.sample(wo, rng);
-            weight = sample.weight / (1 - diffuse_prob);
+            pdf    = 1 - diffuse_prob;
         }
+
+        Color weight = sample.weight / pdf;
 
         return BsdfSample{ .wi     = sample.wi.normalized(),
                            .weight = weight,
-                           .pdf    = sample.pdf };
+                           .pdf    = pdf };
 
         // hint: sample either `combination.diffuse` (probability
         // `combination.diffuseSelectionProb`) or `combination.metallic`

@@ -22,7 +22,7 @@ public:
         return DirectLightSample{ .wi       = dir.normalized(),
                                   .weight   = intensity * falloff,
                                   .distance = distance,
-                                  .pdf      = 1.0f }; // TODO
+                                  .pdf      = Infinity };
     }
 
     bool canBeIntersected() const override { return false; }
