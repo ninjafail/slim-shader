@@ -19,7 +19,7 @@ public:
 
         float p_bsdf = 1.0f;
 
-        for (int cur_depth = 1; cur_depth < depth; cur_depth++) {
+        for (int cur_depth = 0; cur_depth < depth; cur_depth++) {
             Intersection its = m_scene->intersect(cur_ray, rng);
 
             // If no intersection was found: we add contribution of background
@@ -46,9 +46,10 @@ public:
                     Intersection light_its =
                         m_scene->intersect(reverse_light_ray, rng);
                     if (!light_its && light_its.t >= sample.distance) {
-                        light_contribution =
-                            sample.weight * its.evaluateBsdf(sample.wi).value;
-                        p_ne = sample.pdf * light.probability;
+                        light_contribution = sample.weight *
+                                             its.evaluateBsdf(sample.wi).value /
+                                             light.probability;
+                        p_ne = sample.pdf;
                     }
                 }
             }
@@ -61,7 +62,7 @@ public:
             float weight_ne;
 
             float pdf_sum = p_ne + p_bsdf;
-            if (pdf_sum > 0 && p_ne != Infinity && p_bsdf != Infinity) {
+            if (pdf_sum > 0 && p_ne < Infinity && p_bsdf < Infinity) {
                 weight_bsdf = p_bsdf / pdf_sum;
                 weight_ne   = p_ne / pdf_sum;
             } else if (p_ne == Infinity) {

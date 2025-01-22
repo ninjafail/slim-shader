@@ -17,7 +17,7 @@ public:
         return DirectLightSample{ .wi       = direction.normalized(),
                                   .weight   = intensity,
                                   .distance = Infinity,
-                                  .pdf      = 1.0f }; // TODO
+                                  .pdf      = Infinity };
     }
 
     bool canBeIntersected() const override { return false; }
