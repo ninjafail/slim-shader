@@ -16,7 +16,8 @@ public:
                                    Sampler &rng) const override {
         return DirectLightSample{ .wi       = direction.normalized(),
                                   .weight   = intensity,
-                                  .distance = Infinity };
+                                  .distance = Infinity,
+                                  .pdf      = 1.0f }; // TODO
     }
 
     bool canBeIntersected() const override { return false; }

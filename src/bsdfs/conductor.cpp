@@ -22,7 +22,7 @@ public:
                       Sampler &rng) const override {
         Color color = m_reflectance.get()->evaluate(uv);
         Vector wi   = reflect(wo, Vector(0, 0, 1));
-        return BsdfSample{ wi, color };
+        return BsdfSample{ .wi = wi, .weight = color, .pdf = Infinity };
     }
 
     std::string toString() const override {

@@ -48,7 +48,9 @@ public:
 
         Color color = m_reflectance.get()->evaluate(uv) * gi;
 
-        return BsdfSample{ wi, color };
+        float pdf = microfacet::detReflection(n, wo);
+
+        return BsdfSample{ .wi = wi, .weight = color, .pdf = pdf };
 
         // hints:
         // * do not forget to cancel out as many terms from your equations as

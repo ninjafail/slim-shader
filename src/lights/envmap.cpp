@@ -53,10 +53,11 @@ public:
         // (useful for environment maps with bright tiny light sources, like the
         // sun for example)
 
-        return {
+        return DirectLightSample{
             .wi       = direction,
             .weight   = E.value * Inv4Pi,
             .distance = Infinity,
+            .pdf      = 1.0f, // TODO
         };
     }
 
