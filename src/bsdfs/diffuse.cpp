@@ -39,6 +39,10 @@ public:
                            .weight = m_albedo->evaluate(uv) };
     }
 
+    Color albedo(const Point2 &uv) const override {
+        return m_albedo->evaluate(uv);
+    }
+
     std::string toString() const override {
         return tfm::format(
             "Diffuse[\n"
