@@ -81,11 +81,22 @@ public:
 
     Point getCentroid() const override { return Point(0); }
 
-    AreaSample sampleArea(Sampler &rng) const override{ NOT_IMPLEMENTED }
-
-    std::string toString() const override {
-        return "Sphere[]";
+    AreaSample sampleArea(Sampler &rng) const override {
+        // TODO: currently we're sampling on the whole sphere, only using the 
+        // visible one would greatly improve the sampling efficiency, but we're
+        // not using a sphere in the comptetition so don't bother _shrug_ 
+        Point2 rnd = rng.next2D(); // sample a random point in [0,0]..[1,1]
+        // stretch the random point to [-1,-1]..[+1,+1] and set z=0
+        // Point position{ 2 * rnd.x() - 1, 2 * rnd.y() - 1, 0 };
+        Point position = squareToUniformSphere(rnd);
+        AreaSample sample;
+        populate(sample,
+                 position); // compute the shading frame, texture coordinates
+                            // and area pdf (same as intersection)
+        return sample;
     }
+
+    std::string toString() const override { return "Sphere[]"; }
 };
 } // namespace lightwave
 REGISTER_SHAPE(Sphere, "sphere")
