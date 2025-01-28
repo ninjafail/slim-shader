@@ -32,6 +32,7 @@ class TriangleMesh : public AccelerationStructure {
     /// @brief Whether to interpolate the normals from m_vertices, or report the
     /// geometric normal instead.
     bool m_smoothNormals;
+    float area;
 
 protected:
     int numberOfPrimitives() const override { return int(m_triangles.size()); }
@@ -144,6 +145,19 @@ public:
                m_triangles.size(),
                m_vertices.size());
         buildAccelerationStructure();
+        area = 0;
+        for (int i = 0; i < m_triangles.size(); i++) {
+            Vector3i indices = m_triangles[i];
+
+            Vertex v0 = m_vertices[indices[0]];
+            Vertex v1 = m_vertices[indices[1]];
+            Vertex v2 = m_vertices[indices[2]];
+
+            Vector v0v1 = v1.position - v0.position;
+            Vector v0v2 = v2.position - v0.position;
+
+            area += 0.5 * v0v1.cross(v0v2).length();
+        }
     }
 
     bool intersect(const Ray &ray, Intersection &its,
@@ -152,10 +166,32 @@ public:
         return AccelerationStructure::intersect(ray, its, rng);
     }
 
-    AreaSample sampleArea(Sampler &rng) const override{
+    AreaSample sampleArea(Sampler &rng) const override {
         // only implement this if you need triangle mesh area light sampling for
         // your rendering competition
-        NOT_IMPLEMENTED
+        // TODO: this does not work for arbitrary meshes, only for rectangles,
+        // but since we only have rectangular area lights, this is fine
+        Point2 rnd = rng.next2D();
+        Point position{
+            2 * rnd.x() - 1, 2 * rnd.y() - 1, 0
+        }; // stretch the random point to [-1,-1]..[+1,+1] and set z=0
+
+        AreaSample surf;
+        surf.position = position;
+
+        surf.uv.x() = position.x();
+        surf.uv.y() = position.y();
+        
+        // the tangent always points in positive x direction
+        surf.tangent = Vector(1, 0, 0);
+        // and accordingly, the normal always points in the positive z direction
+        surf.shadingNormal  = Vector(0, 0, 1);
+        surf.geometryNormal = Vector(0, 0, 1);
+
+        // since we sample the area uniformly, the pdf is given by 1/surfaceArea
+        surf.pdf = 1.0f / area;
+
+        return surf;
     }
 
     std::string toString() const override {

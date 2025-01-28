@@ -11,7 +11,6 @@ void Instance::transformFrame(SurfaceEvent &surf, const Vector &wo) const {
     // -> keep the direction of the tangent (but normalize it)
 
     Frame shadingFrame = surf.shadingFrame();
-    surf.tangent       = shadingFrame.tangent.normalized();
     if (m_normal) {
         // perturb the normal: we need to map the texture color to a vector
         // which requires a transformation from [0,1] to [-1,1]
@@ -20,10 +19,21 @@ void Instance::transformFrame(SurfaceEvent &surf, const Vector &wo) const {
             2.f * Vector(normalC.r(), normalC.g(), normalC.b()) - Vector(1.f);
         shadingFrame.normal = normal.normalized();
     }
+    // area is determined (not by the determinant) but by the change of the
+    // surface tangents
+
+    Vector t_tangent = m_transform->apply(shadingFrame.tangent);
+    Vector t_bitangent =
+        m_transform->apply(shadingFrame.bitangent);
+    float surfaceIncrease = abs(t_tangent.cross(t_bitangent).length());
+    surf.pdf /= surfaceIncrease;
+
+    surf.position = m_transform->apply(surf.position);
     surf.geometryNormal =
         m_transform->applyNormal(shadingFrame.normal).normalized();
-
     surf.shadingNormal = surf.geometryNormal;
+    surf.tangent       = t_tangent.normalized();
+    // decrease the pdf accordingly to the increase/decrease of the area
 }
 
 inline void validateIntersection(const Intersection &its) {
@@ -92,6 +102,7 @@ bool Instance::intersect(const Ray &worldRay, Intersection &its,
     // -> transform the hit point to world space and get distance
     its.position = m_transform->apply(its.position);
     its.t        = (its.position - worldRay.origin).length();
+    its.position = m_transform->inverse(its.position);
 
     transformFrame(its, -localRay.direction);
 
