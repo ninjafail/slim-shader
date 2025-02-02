@@ -37,25 +37,24 @@ public:
             cos_theta = -cos_theta;
         }
         float fresnel = fresnelDielectric(cos_theta, ior);
+        float pdf;
 
         // Decide whether to reflect or refract
         float dec = rng.next();
-        Vector wi;
+        Vector wi = refract(wo, normal, ior);
         Color color;
-        if (dec <= fresnel) {
+        if (dec <= fresnel || wi == Vector(0)) {
             // Reflect
             wi    = reflect(wo, normal);
             color = m_reflectance->evaluate(uv);
+            pdf   = fresnel;
         } else {
             // Refract
             wi    = refract(wo, normal, ior);
             color = m_transmittance->evaluate(uv) / (sqr(ior));
-            if (wi == Vector(0)) { // TIR occurs
-                wi    = reflect(wo, normal);
-                color = m_reflectance->evaluate(uv);
-            }
+            pdf   = 1 - fresnel;
         }
-        return BsdfSample{ wi.normalized(), color };
+        return BsdfSample{ .wi = wi.normalized(), .weight = color, .pdf = pdf };
     }
 
     std::string toString() const override {

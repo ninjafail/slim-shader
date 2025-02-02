@@ -1,0 +1,32 @@
+  <camera type="thinlens">
+    <integer name="width" value="1920"/>
+    <integer name="height" value="1080"/>
+    <float name="fov" value="47.405"/>
+    <string name="fovAxis" value="x"/>
+    <float name="focalDistance" value="1.88"/>
+    <float name="lensRadius" value="0.03"/>
+
+<integrator type="albedo">
+  <ref id="scene"/>
+  <image id="rendering-competition-albedo"/>
+  <sampler type="independent" count="256"/>
+</integrator>
+<integrator type="aov" variable="normals">
+  <ref id="scene"/>
+  <image id="rendering-competition-normal"/>
+  <sampler type="independent" count="256"/>
+</integrator>
+<integrator type="pathtracer" depth="10">
+  <ref id="scene"/>
+  <image id="rendering-competition"/>
+  <sampler type="independent" count="2048"/>
+</integrator>
+
+<postprocess type="denoising">
+  <ref name="input" id="rendering-competition"/>
+  <ref name="normal" id="rendering-competition-normal"/>
+  <ref name="albedo" id="rendering-competition-albedo"/>
+  <image id="rendering-competition-output"/>
+</postprocess>
+
+suzanne zu 0.3

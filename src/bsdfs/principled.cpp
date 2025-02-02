@@ -32,7 +32,10 @@ struct DiffuseLobe {
         // Frame::absCosTheta(vec) = vec.z(). Thus when dividing by the pdf,
         // the InvPi and Frame::absCosTheta(out_dir) cancel out, leaving us with
         // with the albedo value.
-        return BsdfSample{ .wi = out_dir.normalized(), .weight = color };
+        Vector wi = out_dir.normalized();
+        return BsdfSample{ .wi     = wi,
+                           .weight = color,
+                           .pdf    = cosineHemispherePdf(wi) };
 
         // hints:
         // * copy your diffuse bsdf evaluate here
@@ -72,7 +75,11 @@ struct MetallicLobe {
 
         Color result = color * gi;
 
-        return BsdfSample{ wi.normalized(), result };
+        float pdf = microfacet::detReflection(n, wo);
+
+        return BsdfSample{ .wi     = wi.normalized(),
+                           .weight = result,
+                           .pdf    = pdf };
 
         // hints:
         // * copy your roughconductor bsdf sample here
@@ -153,22 +160,30 @@ public:
         const auto combination = combine(uv, wo);
 
         BsdfSample sample;
-        Color weight;
 
         float dec          = rng.next();
         float diffuse_prob = combination.diffuseSelectionProb;
+        float pdf;
         if (dec < combination.diffuseSelectionProb) {
             sample = combination.diffuse.sample(wo, rng);
-            weight = sample.weight / diffuse_prob;
+            pdf    = diffuse_prob;
         } else {
             sample = combination.metallic.sample(wo, rng);
-            weight = sample.weight / (1 - diffuse_prob);
+            pdf    = 1 - diffuse_prob;
         }
 
-        return BsdfSample{ sample.wi.normalized(), weight };
+        Color weight = sample.weight / pdf;
+
+        return BsdfSample{ .wi     = sample.wi.normalized(),
+                           .weight = weight,
+                           .pdf    = pdf };
 
         // hint: sample either `combination.diffuse` (probability
         // `combination.diffuseSelectionProb`) or `combination.metallic`
+    }
+
+    Color albedo(const Point2 &uv) const override {
+        return m_baseColor->evaluate(uv);
     }
 
     std::string toString() const override {

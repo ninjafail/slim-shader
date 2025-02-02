@@ -18,6 +18,7 @@ struct BsdfSample {
     /// @brief The weight of the sample, given by @code cos(theta) * B(wi, wo) /
     /// p(wi) @endcode
     Color weight;
+    float pdf;
 
     /// @brief Return an invalid sample, used to denote that sampling has
     /// failed.
@@ -25,13 +26,12 @@ struct BsdfSample {
         return {
             .wi     = Vector(0),
             .weight = Color(0),
+            .pdf    = 0.0f,
         };
     }
 
     /// @brief Tests whether the sample is invalid (i.e., sampling has failed).
-    bool isInvalid() const {
-        return weight == Color(0);
-    }
+    bool isInvalid() const { return weight == Color(0); }
     explicit operator bool() const { return !isInvalid(); }
 };
 
@@ -81,6 +81,12 @@ public:
      */
     virtual BsdfSample sample(const Point2 &uv, const Vector &wo,
                               Sampler &rng) const = 0;
+
+    /**
+     * @brief Returns the albedo of the bsdf at a given point on the surface.
+     * @param uv The texture coordinates of the surface.
+     */
+    virtual Color albedo(const Point2 &uv) const { return Color(0); };
 };
 
 } // namespace lightwave
