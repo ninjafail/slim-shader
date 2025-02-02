@@ -185,7 +185,10 @@ BsdfSample Intersection::sampleBsdf(Sampler &rng) const {
         logger(EError, "offending BSDF: %s", instance->bsdf()->toString());
         logger(EError, "  input was: %s with length %f", wo, wo.length());
     });
-    bsdfSample.wi = shadingFrame().toWorld(bsdfSample.wi);
+    bsdfSample.wi = shadingFrame().toWorld(bsdfSample.wi).normalized();
+    if (!std::isfinite(bsdfSample.wi.x()) || !std::isfinite(bsdfSample.wi.y()) ||
+        !std::isfinite(bsdfSample.wi.z()))
+        return BsdfSample::invalid();
     assert_normalized(bsdfSample.wi, {});
     return bsdfSample;
 }
