@@ -70,6 +70,9 @@ bool Instance::intersect(const Ray &worldRay, Intersection &its,
         const bool wasIntersected = m_shape->intersect(localRay, its, rng);
         if (wasIntersected) {
             its.instance = this;
+            if (!std::isfinite(its.t) || its.t < Epsilon) {
+                return false;
+            }
             validateIntersection(its);
         }
         return wasIntersected;
@@ -97,6 +100,9 @@ bool Instance::intersect(const Ray &worldRay, Intersection &its,
     }
 
     its.instance = this;
+    if (!std::isfinite(its.t) || its.t < Epsilon) {
+        return false;
+    }
     validateIntersection(its);
     // -> transform the hit point to world space and get distance
     its.position = m_transform->apply(its.position);
