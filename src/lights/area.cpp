@@ -24,11 +24,14 @@ public:
             m_shape->emission()->evaluate(sample.uv, sampleLocal);
         float cosine  = Frame::cosTheta(sampleLocal);
         float falloff = 1 / (distance * distance);
+        float areaPdf = cosine / sample.pdf;
+        float pdf     = falloff / sample.pdf *
+                    abs(sample.shadingFrame().normal.dot(dir.normalized()));
 
-        return DirectLightSample{ .wi     = dir,
-                                  .weight = emission.value * cosine * falloff /
-                                            sample.pdf,
-                                  .distance = distance };
+        return DirectLightSample{ .wi       = dir.normalized(),
+                                  .weight   = emission.value * areaPdf * falloff,
+                                  .distance = distance,
+                                  .pdf      = areaPdf };
     }
 
     bool canBeIntersected() const override { return true; }

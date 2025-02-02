@@ -26,7 +26,7 @@ public:
         // First sample ray direction
         Vector out_dir = squareToCosineHemisphere(rng.next2D());
         // sometimes we get a ray direction that is not in the same hemisphere
-        // Remark: sample solution uses cosTheta(wo) to check hemisphere and 
+        // Remark: sample solution uses cosTheta(wo) to check hemisphere and
         // flips whole vector
         if (!Frame::sameHemisphere(wo, out_dir)) {
             out_dir.z() *= -1;
@@ -35,8 +35,10 @@ public:
         // Frame::absCosTheta(vec) = vec.z(). Thus when dividing by the pdf,
         // the InvPi and Frame::absCosTheta(out_dir) cancel out, leaving us with
         // with the albedo value.
-        return BsdfSample{ .wi     = out_dir.normalized(),
-                           .weight = m_albedo->evaluate(uv) };
+        Vector wi = out_dir.normalized();
+        return BsdfSample{ .wi     = wi,
+                           .weight = m_albedo->evaluate(uv),
+                           .pdf    = cosineHemispherePdf(wi) };
     }
 
     Color albedo(const Point2 &uv) const override {

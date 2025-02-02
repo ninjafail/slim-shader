@@ -23,21 +23,21 @@ struct DirectLightSample {
     /// @brief The distance from the query point to the sampled point on the
     /// light source.
     float distance;
+    float pdf;
 
     /// @brief Return an invalid sample, used to denote that sampling has
     /// failed.
     static DirectLightSample invalid() {
         return {
-            .wi     = Vector(),
-            .weight = Color(),
+            .wi       = Vector(),
+            .weight   = Color(),
             .distance = 0,
+            .pdf      = 0,
         };
     }
 
     /// @brief Tests whether the sample is invalid (i.e., sampling has failed).
-    bool isInvalid() const {
-        return weight == Color(0);
-    }
+    bool isInvalid() const { return weight == Color(0); }
     explicit operator bool() const { return !isInvalid(); }
 };
 

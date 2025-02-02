@@ -21,7 +21,8 @@ public:
         float falloff  = 1 / (distance * distance);
         return DirectLightSample{ .wi       = dir.normalized(),
                                   .weight   = intensity * falloff,
-                                  .distance = distance };
+                                  .distance = distance,
+                                  .pdf      = Infinity };
     }
 
     bool canBeIntersected() const override { return false; }

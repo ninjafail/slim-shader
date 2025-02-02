@@ -71,16 +71,20 @@ public:
         float dec = rng.next();
         Vector wi = refract(wo, normal, ior);
         Color color;
+        float pdf;
+
         if (dec <= fresnel || wi == Vector(0)) {
             // Reflect
             wi    = reflect(wo, normal);
             color = m_reflectance->evaluate(uv);
+            pdf   = microfacet::detReflection(normal, wo) * fresnel;
         } else {
             // Refract
             // wi = refract(wo, normal, ior);
             color = m_transmittance->evaluate(uv) / (sqr(ior));
+            pdf   = microfacet::detReflection(normal, wo) * (1.0f - fresnel);
         }
-        return BsdfSample{ wi.normalized(), color };
+        return BsdfSample{ .wi = wi.normalized(), .weight = color, .pdf = pdf };
     }
 
     std::string toString() const override {
