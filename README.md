@@ -1,3 +1,7 @@
+# Slim Shader
+This is our ray tracer for the Computer Graphics course of winter semester 2024 at Saarland university. As part of the project we created a final render to showcase our features [here](https://ninjafail.github.io/rendering-competition/references). 
+The ray tracer is based on lightwave.
+
 # lightwave
 
 Welcome to _lightwave_, an educational framework for writing ray tracers that can render photo-realistic images!
